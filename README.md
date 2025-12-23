@@ -6,7 +6,9 @@ that's it lol
 
 ## why rust?
 
-idk it seemed cool and everyone says it's fast. plus the compiler yells at you which is lowkey helpful.
+it seemed cool and it's fast. plus the compiler yells at you which is lowk helpful.
+
+i'm using this to learn: https://rust-book.cs.brown.edu/experiment-intro.html
 
 ---
 
