@@ -1,2 +1,11 @@
 /target
 /.vscode
+/tests
+/src/main
+tempCodeRunnerFile
+tempCodeRunnerFile.rs
+*.swp
+*.swo
+.idea/
+.DS_Store
+Thumbs.db
