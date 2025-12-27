@@ -3,13 +3,17 @@ use std::io;
 
 mod game;
 mod counter;
+mod calculator;
+mod color;
 
 fn main() {
     loop {
         println!("What would you like to do?");
         println!("1. Play the game");
         println!("2. Counter");
-        println!("3. Exit");
+        println!("3. Calculator");
+        println!("4. Color Identifier");
+        println!("5. Exit");
     
         let mut choice = String::new();
         io::stdin()
@@ -19,7 +23,9 @@ fn main() {
         match choice.trim() {
             "1" => game::run(),
             "2" => counter::counter(),
-            "3" => {
+            "3" => calculator::run(),
+            "4" => color::run(),
+            "5" => {
                 println!("Exiting...");
                 exit(0);
             }
