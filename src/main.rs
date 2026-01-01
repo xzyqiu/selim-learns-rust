@@ -5,6 +5,7 @@ mod game;
 mod counter;
 mod calculator;
 mod color;
+mod rpg;
 
 fn main() {
     loop {
@@ -13,7 +14,8 @@ fn main() {
         println!("2. Counter");
         println!("3. Calculator");
         println!("4. Color Identifier");
-        println!("5. Exit");
+        println!("5. RPG");
+        println!("6. Exit");
     
         let mut choice = String::new();
         io::stdin()
@@ -25,7 +27,8 @@ fn main() {
             "2" => counter::counter(),
             "3" => calculator::run(),
             "4" => color::run(),
-            "5" => {
+            "5" => rpg::run(),
+            "6" => {
                 println!("Exiting...");
                 exit(0);
             }

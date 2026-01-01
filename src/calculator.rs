@@ -1,3 +1,25 @@
+enum Operation {
+    Add(f64, f64),
+    Subtract(f64, f64),
+    Multiply(f64, f64),
+    Divide(f64, f64),
+}
+
+fn calculate(op: Operation) -> Result<f64, String> {
+    match op {
+        Operation::Add(a, b) => Ok(a + b),
+        Operation::Subtract(a, b) => Ok(a - b),
+        Operation::Multiply(a, b) => Ok(a * b),
+        Operation::Divide(a, b) => {
+            if b == 0.0 {
+                Err("Division by zero".to_string())
+            } else {
+                Ok(a / b)
+            }
+        }
+    }
+}
+
 use std::io;
 
 pub fn run() {
@@ -31,21 +53,14 @@ pub fn run() {
             .read_line(&mut number2)
             .expect("Failed to read line.");
 
-        let choice: u32 = match choice_trim.parse() {
-            Ok(num) => num,
-            Err(_) => {
-                println!("Try entering a number between 1 and 4.");
-                continue;
-            }
-        };
-        let num1: i32 = match number1.trim().parse() {
+        let num1: f64 = match number1.trim().parse() {
             Ok(num) => num,
             Err(_) => {
                 println!("Try entering a number.");
                 continue;
             }
         };
-        let num2: i32 = match number2.trim().parse() {
+        let num2: f64 = match number2.trim().parse() {
             Ok(num) => num,
             Err(_) => {
                 println!("Try entering a number.");
@@ -53,50 +68,44 @@ pub fn run() {
             }
         };
 
-        match choice {
+        let choice_int: u32 = match choice_trim.parse() {
+            Ok(num) => num,
+            Err(_) => {
+                println!("Invalid choice");
+                continue;
+            }
+        };
+
+        match choice_int {
             1 => {
-                println!("{}", add(num1, num2));
+                match calculate(Operation::Add(num1, num2)) {
+                    Ok(result) => println!("{}", result),
+                    Err(e) => println!("Error: {}", e),
+                }
                 break;
             },
             2 => {
-                println!("{}", sub(num1, num2));
+                match calculate(Operation::Subtract(num1, num2)) {
+                    Ok(result) => println!("{}", result),
+                    Err(e) => println!("Error: {}", e),
+                }
                 break;
             },
-            3 => match div(num1, num2) {
-                Some(r) => {
-                    println!("{}", r);
-                    break;
-                },
-                None => println!("Cannot divide by zero"),
+            3 => {
+                match calculate(Operation::Divide(num1, num2)) {
+                    Ok(result) => println!("{}", result),
+                    Err(e) => println!("Error: {}", e),
+                }
+                break;
             },
             4 => {
-                println!("{}", mul(num1, num2));
+                match calculate(Operation::Multiply(num1, num2)) {
+                    Ok(result) => println!("{}", result),
+                    Err(e) => println!("Error: {}", e),
+                }
                 break;
             },
             _ => println!("Invalid choice"),
         };
     }
-}
-
-fn add(x: i32, y: i32) -> i32 {
-    let result = x + y;
-    return result;
-}
-
-fn sub(x: i32, y: i32) -> i32 {
-    let result = x - y;
-    return result;
-}
-
-fn div(x: i32, y: i32) -> Option<i32> {
-    if y == 0 {
-        None
-    } else {
-        Some(x / y)
-    }
-}
-
-fn mul(x: i32, y: i32) -> i32 {
-    let result = x * y;
-    return result;
 }
