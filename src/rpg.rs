@@ -86,7 +86,7 @@ impl Oath {
 }
 
 #[derive(Debug, Clone)]
-struct AliveCharacter {
+struct Character {
     name: String,
     class: CharacterClass,
     hp: u32,
@@ -98,16 +98,9 @@ struct AliveCharacter {
     ultimate: Ultimate,
 }
 
-#[derive(Debug)]
-struct DeadCharacter {
-    name: String,
-    class: CharacterClass,
-    level: u32,
-}
-
-impl AliveCharacter {
-    fn new(name: String, class: CharacterClass) -> AliveCharacter {
-        let mut character = AliveCharacter {
+impl Character {
+    fn new(name: String, class: CharacterClass) -> Character {
+        let mut character = Character {
             name: name,
             class: class,
             hp: 100,
@@ -138,7 +131,7 @@ impl AliveCharacter {
         return character;
     }
 
-    fn take_damage(&mut self, damage: u32) -> Result<(), DeadCharacter> {
+    fn take_damage(&mut self, damage: u32) -> bool {
         let mut effective_damage = damage;
         
         match &self.item {
@@ -164,14 +157,9 @@ impl AliveCharacter {
 
         if self.hp == 0 {
             println!("{}", format!("{} has died.", self.name).red().bold());
-            let dead_char = DeadCharacter {
-                name: self.name.clone(),
-                class: self.class.clone(),
-                level: self.level.clone(),
-            };
-            return Err(dead_char);
+            return true; // character died
         } else {
-            return Ok(());
+            return false; // character still alive
         }
     }
 
@@ -211,7 +199,7 @@ impl AliveCharacter {
         self.item = item;
     }
 
-    fn attack(&self, enemy: &mut AliveCharacter) -> bool {
+    fn attack(&self, enemy: &mut Character) -> bool {
         let mut dmg = self.damage;
         
         // check for weapon
@@ -234,8 +222,8 @@ impl AliveCharacter {
             }
         }
 
-        let result = enemy.take_damage(dmg);
-        if result.is_err() {
+        let died = enemy.take_damage(dmg);
+        if died {
             println!("{}", format!("{} is dead", enemy.name).red().bold());
             return true; // enemy died
         } else {
@@ -256,6 +244,10 @@ impl AliveCharacter {
         }
         
         self.level = self.level + 1;
+    }
+    
+    fn is_dead(&self) -> bool {
+        self.hp == 0
     }
 }
 
@@ -301,17 +293,28 @@ pub fn run() {
         }
     }
     
-    let mut player = AliveCharacter::new(player_name, selected_class);
-    let mut enemy = AliveCharacter::new("Goblin".to_string(), CharacterClass::Warrior);
+    let player = Character::new(player_name, selected_class);
+    let mut enemy = Character::new("Goblin".to_string(), CharacterClass::Warrior);
     enemy.hp = 50; // make enemy weaker
     enemy.damage = 8;
     
-    println!("\n{}", format!("You are {} the {:?}!", player.name, player.class).green().bold());
+    // use a vector to store heroes
+    let mut heroes: Vec<Character> = vec![player];
+    
+    println!("\n{}", format!("You are {} the {:?}!", heroes[0].name, heroes[0].class).green().bold());
     println!("{}", format!("A wild {} appears!", enemy.name).red().bold());
     
     // game loop
     let mut game_over = false;
     while !game_over {
+        // check if player exists
+        if heroes.is_empty() {
+            println!("\n{}", "Game Over! All heroes have fallen...".red().bold());
+            break;
+        }
+        
+        let player = &mut heroes[0];
+        
         println!("\n{}", "--- Your Turn ---".cyan().bold());
         println!("Your HP: {} | Enemy HP: {}", player.hp.to_string().green(), enemy.hp.to_string().red());
         println!("\nWhat will you do?");
@@ -335,8 +338,10 @@ pub fn run() {
             } else {
                 // enemy attacks back
                 println!("\n{}", format!("{}'s turn!", enemy.name).red().bold());
-                let player_died = enemy.attack(&mut player);
+                let player_died = enemy.attack(player);
                 if player_died {
+                    // remove dead player from heroes
+                    heroes.retain(|h| !h.is_dead());
                     println!("\n{}", "Game Over! You were defeated...".red().bold());
                     game_over = true;
                 }
