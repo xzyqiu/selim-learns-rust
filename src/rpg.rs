@@ -295,8 +295,8 @@ pub fn run() {
     
     let player = Character::new(player_name, selected_class);
     let mut enemy = Character::new("Goblin".to_string(), CharacterClass::Warrior);
-    enemy.hp = 50; // make enemy weaker
-    enemy.damage = 8;
+    enemy.hp = 150; // make enemy stronger
+    enemy.damage = 30;
     
     // use a vector to store heroes
     let mut heroes: Vec<Character> = vec![player];

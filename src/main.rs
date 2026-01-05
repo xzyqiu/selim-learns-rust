@@ -1,21 +1,27 @@
 use std::process::exit;
 use std::io;
+use colored::*;
 
 mod game;
 mod counter;
 mod calculator;
 mod color;
 mod rpg;
+mod bank;
 
 fn main() {
     loop {
-        println!("What would you like to do?");
-        println!("1. Play the game");
-        println!("2. Counter");
-        println!("3. Calculator");
-        println!("4. Color Identifier");
-        println!("5. RPG");
-        println!("6. Exit");
+        println!("\n{}", "═══════════════════════════════════════".cyan().bold());
+        println!("{}", "   What would you like to do?".bright_white().bold());
+        println!("{}", "═══════════════════════════════════════".cyan().bold());
+        println!("{} {}", "1.".yellow().bold(), "Play the game".white());
+        println!("{} {}", "2.".yellow().bold(), "Counter".white());
+        println!("{} {}", "3.".yellow().bold(), "Calculator".white());
+        println!("{} {}", "4.".yellow().bold(), "Color Identifier".white());
+        println!("{} {}", "5.".yellow().bold(), "RPG".white());
+        println!("{} {}", "6.".yellow().bold(), "Banking App".white());
+        println!("{} {}", "7.".yellow().bold(), "Exit".white());
+        println!("{}", "═══════════════════════════════════════".cyan().bold());
     
         let mut choice = String::new();
         io::stdin()
@@ -28,11 +34,12 @@ fn main() {
             "3" => calculator::run(),
             "4" => color::run(),
             "5" => rpg::run(),
-            "6" => {
-                println!("Exiting...");
+            "6" => bank::run(),
+            "7" => {
+                println!("Goodbye!");
                 exit(0);
             }
-            _ => println!("Invalid choice, please try again."),
+            _ => println!("{}", "Invalid option".red()),
         };
     }
 }
