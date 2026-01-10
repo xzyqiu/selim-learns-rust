@@ -2,7 +2,7 @@ use std::process::exit;
 use std::io;
 use colored::*;
 
-mod game;
+// mod game; // Remove if not present
 mod counter;
 mod calculator;
 mod color;
@@ -29,11 +29,12 @@ fn main() {
             .expect("Failed to read line");
 
         match choice.trim() {
-            "1" => game::run(),
+            // "1" => game::run(), // Remove or fix if not present
+            "1" => println!("Game not implemented."),
             "2" => counter::counter(),
             "3" => calculator::run(),
             "4" => color::run(),
-            "5" => rpg::run(),
+            "5" => rpg::game::run(),
             "6" => bank::run(),
             "7" => {
                 println!("Goodbye!");
