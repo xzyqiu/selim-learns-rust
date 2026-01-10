@@ -9,11 +9,42 @@ enum CharacterClass {
     Rogue 
 }
 
-#[derive(Debug, Clone, Copy)]
-enum Item { 
-    Potion(u32), 
-    Weapon(u32), 
-    Armor(u32), 
+#[derive(Debug, Clone)]
+struct Inventory {
+    items: Vec<Item>,
+}
+
+impl Inventory {
+    fn new() -> Inventory {
+        Inventory {
+            items: Vec::new(),
+        }
+    }
+
+    fn add(&mut self, item: Item) {
+        self.items.push(item);
+    }
+
+    fn has(&self, item: &Item) -> bool {
+        self.items.contains(item)
+    }
+
+    fn remove(&mut self, item: &Item) -> bool {
+        if let Some(pos) = self.items.iter().position(|x| x == item) {
+            self.items.remove(pos);
+            true
+        } else {
+            false
+        }
+    }
+}
+
+
+#[derive(Debug, Clone, PartialEq)]
+enum Item {
+    Potion(u32),
+    Weapon(u32),
+    Armor(u32),
     Nothing,
 }
 
@@ -96,20 +127,22 @@ struct Character {
     item: Item,
     oath: Oath,
     ultimate: Ultimate,
+    inventory: Inventory,
 }
 
 impl Character {
     fn new(name: String, class: CharacterClass) -> Character {
         let mut character = Character {
-            name: name,
-            class: class,
+            name,
+            class,
             hp: 100,
-            level: 1,  
+            level: 1,
             damage: 10,
             intelligence: 0, // will set this later
             item: Item::Nothing,
             oath: Oath::Oathless,
             ultimate: Ultimate::ShadowStep, // default, will change
+            inventory: Inventory::new(),
         };
         
         // set intelligence based on class
@@ -178,25 +211,35 @@ impl Character {
 
     fn heal(&mut self) {
         let mut heal_amount = self.intelligence;
-        
-        // check if we have potion
-        if let Item::Potion(amount) = &self.item {
-            heal_amount = heal_amount + amount;
-            self.item = Item::Nothing; // consume potion
+
+        // check if we have potion in inventory
+        let potion = self.inventory.items.iter().find(|item| matches!(item, Item::Potion(_)));
+        if let Some(Item::Potion(amount)) = potion {
+            heal_amount += amount;
+            // remove potion from inventory
+            self.inventory.remove(&Item::Potion(*amount));
+        } else {
+            println!("{}", "No potion in inventory!".red());
+            return;
         }
-        
+
         // check oath bonus
         if let Oath::Saltchemist = &self.oath {
-            heal_amount = heal_amount + 20;
+            heal_amount += 20;
         }
-        
-        self.hp = self.hp + heal_amount;
-        
+
+        self.hp += heal_amount;
+
         println!("{}", format!("{} healed! HP is now {}", self.name, self.hp).green().bold());
     }
 
     fn equip_item(&mut self, item: Item) {
-        self.item = item;
+        if self.inventory.has(&item) {
+            println!("{}", format!("Equipped {}!", item.name()).green());
+            self.item = item;
+        } else {
+            println!("{}", "Item not in inventory!".red());
+        }
     }
 
     fn attack(&self, enemy: &mut Character) -> bool {
@@ -312,9 +355,9 @@ pub fn run() {
             println!("\n{}", "Game Over! All heroes have fallen...".red().bold());
             break;
         }
-        
+
         let player = &mut heroes[0];
-        
+
         println!("\n{}", "--- Your Turn ---".cyan().bold());
         println!("Your HP: {} | Enemy HP: {}", player.hp.to_string().green(), enemy.hp.to_string().red());
         println!("\nWhat will you do?");
@@ -324,9 +367,10 @@ pub fn run() {
         println!("4. Choose Oath");
         println!("5. Check Status");
         println!("6. Run Away");
-        
+        println!("7. Add Item to Inventory");
+
         let action = read_input();
-        
+
         if action == "1" {
             println!("{}", format!("{} attacks {}!", player.name, enemy.name).yellow().bold());
             let enemy_died = player.attack(&mut enemy);
@@ -353,34 +397,32 @@ pub fn run() {
             println!("1. Potion (healing: 20)");
             println!("2. Weapon (damage: +15)");
             println!("3. Armor (defense: 10)");
-            
+
             let item_choice = read_input();
-            
-            if item_choice == "1" {
-                player.equip_item(Item::Potion(20));
-                println!("{}", "Equipped Potion!".green());
-            } else if item_choice == "2" {
-                player.equip_item(Item::Weapon(15));
-                println!("{}", "Equipped Weapon!".green());  
-            } else if item_choice == "3" {
-                player.equip_item(Item::Armor(10));
-                println!("{}", "Equipped Armor!".green());
-            } else {
-                println!("{}", "Invalid choice.".red());
-            }
+
+            let item = match item_choice.as_str() {
+                "1" => Item::Potion(20),
+                "2" => Item::Weapon(15),
+                "3" => Item::Armor(10),
+                _ => {
+                    println!("{}", "Invalid choice.".red());
+                    continue;
+                }
+            };
+            player.equip_item(item);
         } else if action == "4" {
             println!("\nChoose an Oath:");
             println!("1. Bladesharper - {}", Oath::Bladesharper.info());
             println!("2. Jetstriker - {}", Oath::Jetstriker.info());
             println!("3. Saltchemist - {}", Oath::Saltchemist.info());
-            
+
             let oath_choice = read_input();
-            
+
             let selected_oath: Oath;
-            
+
             if oath_choice == "1" {
                 selected_oath = Oath::Bladesharper;
-            } else if oath_choice == "2" {  
+            } else if oath_choice == "2" {
                 selected_oath = Oath::Jetstriker;
             } else if oath_choice == "3" {
                 selected_oath = Oath::Saltchemist;
@@ -388,27 +430,47 @@ pub fn run() {
                 println!("{}", "Invalid choice.".red());
                 continue; // skip the rest
             }
-            
+
             let result = player.get_oath(selected_oath);
             println!("{}", result.green());
         } else if action == "5" {
             println!("\n{}", "--- Character Status ---".cyan().bold());
             println!("Name: {}", player.name.yellow());
             println!("Class: {:?}", player.class);
-            println!("Level: {}", player.level);  
+            println!("Level: {}", player.level);
             println!("HP: {}", player.hp.to_string().green());
             println!("Damage: {}", player.damage);
             println!("Intelligence: {}", player.intelligence);
             println!("Equipped: {}", player.item.name().cyan());
             println!("Oath: {:?} - {}", player.oath, player.oath.info());
             println!("Ultimate: {:?}", player.ultimate);
+            println!("Inventory:");
+            for item in &player.inventory.items {
+                println!("- {}", item.name());
+            }
         } else if action == "6" {
             println!("{}", "You fled from battle!".yellow());
             game_over = true;
-        } else {
-            println!("{}", "Invalid choice. Please try again.".red());
+        } else if action == "7" {
+            println!("\nChoose an item to add to inventory:");
+            println!("1. Potion (healing: 20)");
+            println!("2. Weapon (damage: +15)");
+            println!("3. Armor (defense: 10)");
+
+            let item_choice = read_input();
+
+            let item = match item_choice.as_str() {
+                "1" => Item::Potion(20),
+                "2" => Item::Weapon(15),
+                "3" => Item::Armor(10),
+                _ => {
+                    println!("{}", "Invalid choice.".red());
+                    continue;
+                }
+            };
+            println!("{}", format!("Added {} to inventory!", item.name()).green());
+            player.inventory.add(item);
         }
     }
-    
     println!("\n{}", "Thanks for playing!".cyan().bold());
 }
